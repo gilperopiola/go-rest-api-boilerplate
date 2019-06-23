@@ -1,0 +1,18 @@
+{
+    "port": "8082",
+    "debug": false,
+    "database": {
+        "type": "mysql",
+        "username": "root",
+        "password": "",
+        "hostname": "127.0.0.1",
+        "port": "3306",
+        "schema": "lyfe_companyon_test",
+        "create_schema": false,
+        "purge": true
+    },
+    "jwt": {
+        "secret": "a0#3ndl2",
+        "session_duration": 14
+    }
+}
