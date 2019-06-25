@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//SignUp takes {email, password, repeatPassword}. It creates a user and returns it.
-func SignUp(c *gin.Context) {
+//Signup takes {email, password, repeatPassword}. It creates a user and returns it.
+func Signup(c *gin.Context) {
 	var auth Auth
 	c.BindJSON(&auth)
 
@@ -83,6 +83,18 @@ func CreateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func GetUsers(c *gin.Context) {
+	user := &User{}
+
+	users, err := user.GetAll()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
 }
 
 func GetUser(c *gin.Context) {

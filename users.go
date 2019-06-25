@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"time"
 
 	"github.com/gilperopiola/go-rest-api-boilerplate/utils"
@@ -24,12 +25,12 @@ type User struct {
 
 type UserActions interface {
 	//External
+	Login() (*User, error)
 	Create() (*User, error)
 	Get() (*User, error)
+	GetAll() ([]*User, error)
 	Update() (*User, error)
 	Delete() (*User, error)
-
-	Login() (*User, error)
 
 	GenerateTestRequest(token, method, url string) *httptest.ResponseRecorder
 	GenerateJSONBody() string
@@ -39,6 +40,8 @@ type UserActions interface {
 	getRoles() ([]Role, error)
 	updateRoles() ([]Role, error)
 	deleteRoles() error
+
+	getRolesJSONBodyString() string
 }
 
 type Role int
@@ -49,6 +52,14 @@ const (
 )
 
 //External Functions
+func (user *User) Login() (*User, error) {
+	if err := db.DB.QueryRow(`SELECT id FROM users WHERE email = ? AND password = ?`, user.Email, user.Password).Scan(&user.ID); err != nil {
+		return &User{}, err
+	}
+
+	user.Token = generateToken(*user)
+	return user, nil
+}
 
 func (user *User) Create() (*User, error) {
 	result, err := db.DB.Exec(`INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)`, user.Email, user.Password, user.FirstName, user.LastName)
@@ -60,12 +71,7 @@ func (user *User) Create() (*User, error) {
 
 	user.createRoles()
 
-	user, err = user.Get()
-	if err != nil {
-		return &User{}, err
-	}
-
-	return user, nil
+	return user.Get()
 }
 
 func (user *User) Get() (*User, error) {
@@ -83,6 +89,26 @@ func (user *User) Get() (*User, error) {
 	return user, nil
 }
 
+func (user *User) GetAll() ([]*User, error) {
+	rows, err := db.DB.Query(`SELECT id, email, first_name, last_name, enabled, date_created FROM users`)
+	defer rows.Close()
+	if err != nil {
+		return []*User{}, err
+	}
+
+	users := []*User{}
+	for rows.Next() {
+		err = rows.Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Enabled, &user.DateCreated)
+		if err != nil {
+			return []*User{}, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func (user *User) Update() (*User, error) {
 	_, err := db.DB.Exec(`UPDATE users SET email = ?, first_name = ?, last_name = ? WHERE id = ?`, user.Email, user.FirstName, user.LastName, user.ID)
 	if err != nil {
@@ -98,14 +124,12 @@ func (user *User) Update() (*User, error) {
 }
 
 func (user *User) ToggleEnabled() (*User, error) {
-	_, err := db.DB.Exec(`UPDATE users SET enabled = ? WHERE id = ?`, !user.Enabled, user.ID)
+	_, err := db.DB.Exec(`UPDATE users SET enabled = NOT enabled WHERE id = ?`, user.ID)
 	if err != nil {
 		return &User{}, err
 	}
 
-	user.Enabled = !user.Enabled
-
-	return user, nil
+	return user.Get()
 }
 
 func (user *User) GenerateTestRequest(token, method, url string) *httptest.ResponseRecorder {
@@ -120,7 +144,11 @@ func (user *User) GenerateTestRequest(token, method, url string) *httptest.Respo
 func (user *User) GetJSONBody() string {
 	body := `{
 		"email": "` + user.Email + `",
-		"password": "` + user.Password + `"
+		"password": "` + user.Password + `",
+		"firstName": "` + user.FirstName + `",
+		"lastName": "` + user.LastName + `",
+		"roles": [` + user.getRolesJSONBodyString() + `],
+		"enabled": ` + utils.BoolToString(user.Enabled) + `
 	}`
 	return body
 }
@@ -184,11 +212,16 @@ func (user *User) deleteRoles() error {
 	return nil
 }
 
-func (user *User) Login() (*User, error) {
-	if err := db.DB.QueryRow(`SELECT id FROM users WHERE email = ? AND password = ?`, user.Email, user.Password).Scan(&user.ID); err != nil {
-		return &User{}, err
+func (user *User) getRolesJSONBodyString() string {
+	rolesString := ""
+
+	for i, role := range user.Roles {
+		rolesString += strconv.Itoa(int(role))
+
+		if i+1 < len(user.Roles) {
+			rolesString += ", "
+		}
 	}
 
-	user.Token = generateToken(*user)
-	return user, nil
+	return rolesString
 }

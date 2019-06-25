@@ -27,15 +27,18 @@ func (router *MyRouter) Setup() {
 
 	public := router.Group("/")
 	{
-		public.POST("/SignUp", SignUp)
-		public.POST("/LogIn", Login)
+		public.POST("/Signup", Signup)
+		public.POST("/Login", Login)
 	}
 
 	user := router.Group("/User")
 	{
 		user.POST("", CreateUser)
+		user.GET("", GetUsers)
 		user.GET("/:id_user", GetUser)
 		user.PUT("/:id_user", UpdateUser)
-		user.PUT("/:id_user/enabled", ToggleUserEnabled)
+		user.PUT("/:id_user/Enabled", ToggleUserEnabled)
 	}
+
+	//todo middleware
 }
