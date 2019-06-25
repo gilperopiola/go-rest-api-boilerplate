@@ -18,63 +18,6 @@ type Auth struct {
 	Code           string
 }
 
-//SignUp takes {email, password, repeatPassword}. It creates a user and returns it.
-func SignUp(c *gin.Context) {
-	var auth Auth
-	c.BindJSON(&auth)
-
-	if auth.Email == "" || auth.Password == "" || auth.RepeatPassword == "" {
-		c.JSON(http.StatusBadRequest, "all fields required")
-		return
-	}
-
-	if auth.Password != auth.RepeatPassword {
-		c.JSON(http.StatusBadRequest, "passwords don't match")
-		return
-	}
-
-	hashedPassword := hash(auth.Email, auth.Password)
-
-	user := &User{
-		Email:    auth.Email,
-		Password: hashedPassword,
-	}
-
-	user, err := user.Create()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
-}
-
-//Login takes {username, password}, checks if the user exists and returns it
-func Login(c *gin.Context) {
-	var auth Auth
-	c.BindJSON(&auth)
-
-	if auth.Email == "" || auth.Password == "" {
-		c.JSON(http.StatusBadRequest, "all fields required")
-		return
-	}
-
-	hashedPassword := hash(auth.Email, auth.Password)
-
-	user := &User{
-		Email:    auth.Email,
-		Password: hashedPassword,
-	}
-
-	user, err := user.Login()
-	if err != nil {
-		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
-}
-
 func validateToken(requiredRole string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.Request.Header.Get("Authorization")
@@ -119,6 +62,7 @@ func generateTestingToken() string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Id:        "1",
 		Audience:  "test@test.com",
+		Subject:   "testing",
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Minute).Unix(),
 	})

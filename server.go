@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/gilperopiola/lyfe-companyon-backend/config"
-	"github.com/gilperopiola/lyfe-companyon-backend/database"
+	"github.com/gilperopiola/go-rest-api-boilerplate/config"
+	"github.com/gilperopiola/go-rest-api-boilerplate/database"
 )
 
 var cfg config.MyConfig

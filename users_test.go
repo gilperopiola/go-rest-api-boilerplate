@@ -6,55 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateUser(t *testing.T) {
-	cfg.Setup("_test")
-	db.Setup(cfg)
-	defer db.Close()
-
-	user := &User{
-		Email:     "email",
-		Password:  "password",
-		FirstName: "first_name",
-		LastName:  "last_name",
-	}
-
-	user, err := user.Create()
-
-	assert.NoError(t, err)
-	assert.NotZero(t, user.ID)
-	assert.Equal(t, "email", user.Email)
-	assert.Equal(t, "password", user.Password)
-	assert.Equal(t, "first_name", user.FirstName)
-	assert.Equal(t, "last_name", user.LastName)
-	assert.Equal(t, true, user.Enabled)
-	assert.NotZero(t, user.DateCreated)
-}
-
-func TestGetUserByID(t *testing.T) {
-	cfg.Setup("_test")
-	db.Setup(cfg)
-	defer db.Close()
-
-	user := &User{
-		Email:     "email",
-		Password:  "password",
-		FirstName: "first_name",
-		LastName:  "last_name",
-	}
-
-	user, _ = user.Create()
-	user, err := user.GetByID()
-
-	assert.NoError(t, err)
-	assert.NotZero(t, user.ID)
-	assert.Equal(t, "email", user.Email)
-	assert.Equal(t, "password", user.Password)
-	assert.Equal(t, "first_name", user.FirstName)
-	assert.Equal(t, "last_name", user.LastName)
-	assert.Equal(t, true, user.Enabled)
-	assert.NotZero(t, user.DateCreated)
-}
-
 func TestLoginUser(t *testing.T) {
 	cfg.Setup("_test")
 	db.Setup(cfg)
@@ -65,6 +16,7 @@ func TestLoginUser(t *testing.T) {
 		Password:  "password",
 		FirstName: "first_name",
 		LastName:  "last_name",
+		Roles:     []Role{RoleUser},
 	}
 
 	user, _ = user.Create()
@@ -79,4 +31,92 @@ func TestLoginUser(t *testing.T) {
 	assert.Equal(t, true, user.Enabled)
 	assert.NotZero(t, user.DateCreated)
 	assert.NotZero(t, user.Token)
+}
+
+func TestCreateUser(t *testing.T) {
+	cfg.Setup("_test")
+	db.Setup(cfg)
+	defer db.Close()
+
+	user := &User{
+		Email:     "email",
+		Password:  "password",
+		FirstName: "first_name",
+		LastName:  "last_name",
+		Roles:     []Role{RoleUser},
+	}
+
+	user, err := user.Create()
+
+	assert.NoError(t, err)
+	assert.NotZero(t, user.ID)
+	assert.Equal(t, "email", user.Email)
+	assert.Equal(t, "password", user.Password)
+	assert.Equal(t, "first_name", user.FirstName)
+	assert.Equal(t, "last_name", user.LastName)
+	assert.Equal(t, RoleUser, user.Roles[0])
+	assert.Equal(t, true, user.Enabled)
+	assert.NotZero(t, user.DateCreated)
+}
+
+func TestGetUser(t *testing.T) {
+	cfg.Setup("_test")
+	db.Setup(cfg)
+	defer db.Close()
+
+	user := &User{
+		Email:     "email",
+		Password:  "password",
+		FirstName: "first_name",
+		LastName:  "last_name",
+		Roles:     []Role{RoleUser},
+	}
+
+	user, _ = user.Create()
+	user, err := user.Get()
+
+	assert.NoError(t, err)
+	assert.NotZero(t, user.ID)
+	assert.Equal(t, "email", user.Email)
+	assert.Equal(t, "password", user.Password)
+	assert.Equal(t, "first_name", user.FirstName)
+	assert.Equal(t, "last_name", user.LastName)
+	assert.Equal(t, true, user.Enabled)
+	assert.NotZero(t, user.DateCreated)
+}
+
+func TestUpdateUser(t *testing.T) {
+	cfg.Setup("_test")
+	db.Setup(cfg)
+	defer db.Close()
+
+	user := &User{
+		Email:     "email",
+		Password:  "password",
+		FirstName: "first_name",
+		LastName:  "last_name",
+		Roles:     []Role{RoleUser},
+	}
+
+	user, _ = user.Create()
+
+	user.Email = "email 2"
+	user.Roles = []Role{RoleAdmin}
+
+	user, err := user.Update()
+
+	assert.NoError(t, err)
+	assert.NotZero(t, user.ID)
+	assert.Equal(t, "email 2", user.Email)
+	assert.Equal(t, RoleAdmin, user.Roles[0])
+
+	user, err = user.ToggleEnabled()
+
+	assert.NoError(t, err)
+	assert.False(t, user.Enabled)
+
+	user, err = user.ToggleEnabled()
+
+	assert.NoError(t, err)
+	assert.True(t, user.Enabled)
 }

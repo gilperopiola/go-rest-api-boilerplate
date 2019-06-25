@@ -11,3 +11,11 @@ CREATE TABLE IF NOT EXISTS users (
 	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )
 `
+
+var createUsersRolesTableQuery = `
+CREATE TABLE IF NOT EXISTS users_roles (
+	id int UNIQUE NOT NULL AUTO_INCREMENT,
+	id_user int NOT NULL,
+	id_role int NOT NULL
+)
+`

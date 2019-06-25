@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/gilperopiola/lyfe-companyon-backend/config"
+	"github.com/gilperopiola/go-rest-api-boilerplate/config"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -50,10 +50,15 @@ func (db *MyDatabase) CreateSchema() {
 	if _, err := db.DB.Exec(createUsersTableQuery); err != nil {
 		log.Println(err.Error())
 	}
+
+	if _, err := db.DB.Exec(createUsersRolesTableQuery); err != nil {
+		log.Println(err.Error())
+	}
 }
 
 func (db *MyDatabase) Purge() {
 	db.DB.Exec("DELETE FROM users")
+	db.DB.Exec("DELETE FROM users_roles")
 }
 
 func (db *MyDatabase) BeautifyError(err error) string {

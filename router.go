@@ -30,4 +30,12 @@ func (router *MyRouter) Setup() {
 		public.POST("/SignUp", SignUp)
 		public.POST("/LogIn", Login)
 	}
+
+	user := router.Group("/User")
+	{
+		user.POST("", CreateUser)
+		user.GET("/:id_user", GetUser)
+		user.PUT("/:id_user", UpdateUser)
+		user.PUT("/:id_user/enabled", ToggleUserEnabled)
+	}
 }
