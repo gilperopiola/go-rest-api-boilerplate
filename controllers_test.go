@@ -14,7 +14,7 @@ func TestCreateUserController(t *testing.T) {
 	db.Setup(cfg)
 	defer db.Close()
 	rtr.Setup()
-	token := generateTestingToken()
+	token := generateTestingToken(RoleAdmin)
 
 	user := User{Email: "newUser@email.com", Password: "password"}
 
@@ -23,6 +23,32 @@ func TestCreateUserController(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.Code)
 	assert.Equal(t, "newUser@email.com", user.Email)
 	assert.Equal(t, true, user.Enabled)
+	assert.Equal(t, RoleUser, user.Roles[0])
+}
+
+func TestSearchUserController(t *testing.T) {
+	cfg.Setup("_test")
+	db.Setup(cfg)
+	defer db.Close()
+	rtr.Setup()
+	token := generateTestingToken(RoleAdmin)
+
+	user := &User{
+		Email:     "email",
+		Password:  "password",
+		FirstName: "first_name",
+		LastName:  "last_name",
+		Roles:     []Role{RoleUser},
+	}
+	user, _ = user.Create()
+
+	users := make([]*User, 0)
+	response := user.GenerateTestRequest(token, "GET", "")
+	json.Unmarshal(response.Body.Bytes(), &users)
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "email", users[0].Email)
+	assert.Equal(t, "first_name", users[0].FirstName)
+	assert.Equal(t, RoleUser, users[0].Roles[0])
 }
 
 func TestGetUserController(t *testing.T) {
@@ -30,7 +56,7 @@ func TestGetUserController(t *testing.T) {
 	db.Setup(cfg)
 	defer db.Close()
 	rtr.Setup()
-	token := generateTestingToken()
+	token := generateTestingToken(RoleAdmin)
 
 	user := &User{
 		Email:     "email",
@@ -52,7 +78,7 @@ func TestUpdateUserController(t *testing.T) {
 	db.Setup(cfg)
 	defer db.Close()
 	rtr.Setup()
-	token := generateTestingToken()
+	token := generateTestingToken(RoleAdmin)
 
 	user := &User{
 		Email:     "email",

@@ -5,9 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gilperopiola/go-rest-api-boilerplate/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +20,7 @@ type Auth struct {
 	Code           string
 }
 
-func validateToken(requiredRole string) gin.HandlerFunc {
+func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.Request.Header.Get("Authorization")
 
@@ -38,13 +40,34 @@ func validateToken(requiredRole string) gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
-			c.Set("ID", claims.Id)
-			c.Set("Email", claims.Audience)
+			if hasRequiredRoles(utils.ToInt(claims.Id), requiredRoles) {
+				c.Set("ID", claims.Id)
+				c.Set("Email", claims.Audience)
+			} else {
+				c.JSON(http.StatusUnauthorized, "authentication error")
+				c.Abort()
+			}
 		} else {
 			c.JSON(http.StatusUnauthorized, "authentication error")
 			c.Abort()
 		}
 	}
+}
+
+func hasRequiredRoles(IDUser int, roles []Role) bool {
+	rolesStrings := make([]string, 0)
+	for _, role := range roles {
+		rolesStrings = append(rolesStrings, utils.ToString(int(role)))
+	}
+	rolesString := strings.Join(rolesStrings, ",")
+
+	var ID int
+	err := db.DB.QueryRow(fmt.Sprintf(`SELECT id FROM users_roles WHERE id_user = %d AND id_role IN (%s)`, IDUser, rolesString)).Scan(&ID)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func generateToken(user User) string {
@@ -58,14 +81,19 @@ func generateToken(user User) string {
 	return tokenString
 }
 
-func generateTestingToken() string {
+func generateTestingToken(roles ...Role) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Id:        "1",
+		Id:        "9999",
 		Audience:  "test@test.com",
 		Subject:   "testing",
 		IssuedAt:  time.Now().Unix(),
 		ExpiresAt: time.Now().Add(time.Minute).Unix(),
 	})
+
+	for _, role := range roles {
+		db.DB.Exec(`INSERT INTO users_roles (id_user, id_role) VALUES (?, ?)`, 9999, role)
+	}
+
 	tokenString, _ := token.SignedString([]byte(cfg.JWT.SECRET))
 	return tokenString
 }

@@ -26,9 +26,10 @@ type User struct {
 type UserActions interface {
 	//External
 	Login() (*User, error)
+
 	Create() (*User, error)
+	Search() ([]*User, error)
 	Get() (*User, error)
-	GetAll() ([]*User, error)
 	Update() (*User, error)
 	Delete() (*User, error)
 
@@ -89,7 +90,7 @@ func (user *User) Get() (*User, error) {
 	return user, nil
 }
 
-func (user *User) GetAll() ([]*User, error) {
+func (user *User) Search() ([]*User, error) {
 	rows, err := db.DB.Query(`SELECT id, email, first_name, last_name, enabled, date_created FROM users`)
 	defer rows.Close()
 	if err != nil {
@@ -103,6 +104,10 @@ func (user *User) GetAll() ([]*User, error) {
 			return []*User{}, err
 		}
 
+		user.Roles, err = user.getRoles()
+		if err != nil {
+			return []*User{}, err
+		}
 		users = append(users, user)
 	}
 

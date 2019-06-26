@@ -76,6 +76,10 @@ func CreateUser(c *gin.Context) {
 
 	user.Password = hash(user.Email, user.Password)
 
+	if len(user.Roles) == 0 {
+		user.Roles = []Role{RoleUser}
+	}
+
 	user, err := user.Create()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
@@ -85,10 +89,10 @@ func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func GetUsers(c *gin.Context) {
+func SearchUsers(c *gin.Context) {
 	user := &User{}
 
-	users, err := user.GetAll()
+	users, err := user.Search()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
 		return

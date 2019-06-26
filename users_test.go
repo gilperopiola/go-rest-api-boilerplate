@@ -97,7 +97,7 @@ func TestGetAllUsers(t *testing.T) {
 	}
 	user, _ = user.Create()
 
-	users, err := user.GetAll()
+	users, err := user.Search()
 	assert.NoError(t, err)
 	assert.NotZero(t, users[0].ID)
 	assert.Equal(t, "email", users[0].Email)

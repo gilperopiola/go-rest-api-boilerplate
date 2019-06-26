@@ -31,14 +31,12 @@ func (router *MyRouter) Setup() {
 		public.POST("/Login", Login)
 	}
 
-	user := router.Group("/User")
+	user := router.Group("/User", validateToken(RoleAdmin))
 	{
 		user.POST("", CreateUser)
-		user.GET("", GetUsers)
+		user.GET("", SearchUsers)
 		user.GET("/:id_user", GetUser)
 		user.PUT("/:id_user", UpdateUser)
 		user.PUT("/:id_user/Enabled", ToggleUserEnabled)
 	}
-
-	//todo middleware
 }
