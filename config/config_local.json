@@ -8,8 +8,9 @@
         "hostname": "127.0.0.1",
         "port": "3306",
         "schema": "lyfe_companyon",
-        "create_schema": false,
-        "purge": false
+        "create_schema": true,
+        "purge": false,
+        "create_admin": true
     },
     "jwt": {
         "secret": "a0#3ndl2",

@@ -44,6 +44,10 @@ func (db *MyDatabase) Setup(cfg config.MyConfig) {
 	if cfg.DATABASE.PURGE {
 		db.Purge()
 	}
+
+	if cfg.DATABASE.CREATE_ADMIN {
+		db.CreateAdmin()
+	}
 }
 
 func (db *MyDatabase) CreateSchema() {
@@ -59,6 +63,20 @@ func (db *MyDatabase) CreateSchema() {
 func (db *MyDatabase) Purge() {
 	db.DB.Exec("DELETE FROM users")
 	db.DB.Exec("DELETE FROM users_roles")
+}
+
+func (db *MyDatabase) CreateAdmin() {
+	result, err := db.DB.Exec("INSERT INTO users (email, password, firstName, lastName) VALUES ('ferra.main@gmail.com', 'MD1pQbDskXpNndv7zuLsZJt24RY=', 'Franco', 'Ferraguti')")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	id, _ := result.LastInsertId()
+
+	if _, err := db.DB.Exec("INSERT INTO users_roles (idUser, idRole) VALUES (?, 1)", id); err != nil {
+		log.Println(err)
+	}
 }
 
 func (db *MyDatabase) BeautifyError(err error) string {

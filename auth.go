@@ -62,7 +62,7 @@ func hasRequiredRoles(IDUser int, roles []Role) bool {
 	rolesString := strings.Join(rolesStrings, ",")
 
 	var ID int
-	err := db.DB.QueryRow(fmt.Sprintf(`SELECT id FROM users_roles WHERE id_user = %d AND id_role IN (%s)`, IDUser, rolesString)).Scan(&ID)
+	err := db.DB.QueryRow(fmt.Sprintf(`SELECT id FROM users_roles WHERE idUser = %d AND idRole IN (%s)`, IDUser, rolesString)).Scan(&ID)
 	if err != nil {
 		return false
 	}
@@ -91,7 +91,7 @@ func generateTestingToken(roles ...Role) string {
 	})
 
 	for _, role := range roles {
-		db.DB.Exec(`INSERT INTO users_roles (id_user, id_role) VALUES (?, ?)`, 9999, role)
+		db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, 9999, role)
 	}
 
 	tokenString, _ := token.SignedString([]byte(cfg.JWT.SECRET))

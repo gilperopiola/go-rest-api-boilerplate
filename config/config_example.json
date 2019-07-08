@@ -9,7 +9,8 @@
         "port": "3306",
         "schema": "schema",
         "create_schema": true,
-        "purge": false
+        "purge": false,
+        "create_admin": true
     },
     "jwt": {
         "secret": "a9jdq2je",

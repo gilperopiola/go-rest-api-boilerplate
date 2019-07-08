@@ -9,7 +9,8 @@
         "port": "3306",
         "schema": "lyfe_companyon_test",
         "create_schema": true,
-        "purge": true
+        "purge": true,
+        "create_admin": false
     },
     "jwt": {
         "secret": "a0#3ndl2",

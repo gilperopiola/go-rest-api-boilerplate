@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 
@@ -13,7 +14,10 @@ var db database.MyDatabase
 var rtr MyRouter
 
 func main() {
-	cfg.Setup("")
+	env := flag.String("env", "local", "local / dev / prod")
+	flag.Parse()
+
+	cfg.Setup(*env)
 	db.Setup(cfg)
 	defer db.Close()
 	rtr.Setup()

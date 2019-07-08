@@ -92,7 +92,20 @@ func CreateUser(c *gin.Context) {
 func SearchUsers(c *gin.Context) {
 	user := &User{}
 
-	users, err := user.Search()
+	params := &UserSearchParameters{
+		FilterID:        c.Query("id"),
+		FilterEmail:     c.Query("email"),
+		FilterFirstName: c.Query("firstName"),
+		FilterLastName:  c.Query("lastName"),
+
+		SortField:     c.Query("sortField"),
+		SortDirection: c.Query("sortDirection"),
+
+		Limit:  utils.ToInt(c.Query("limit")),
+		Offset: utils.ToInt(c.Query("offset")),
+	}
+
+	users, err := user.Search(params)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, db.BeautifyError(err))
 		return
