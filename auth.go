@@ -25,7 +25,7 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 		tokenString := c.Request.Header.Get("Authorization")
 
 		if len(tokenString) < 40 {
-			c.JSON(http.StatusUnauthorized, "authentication error")
+			c.JSON(http.StatusUnauthorized, "authentication error 1")
 			c.Abort()
 			return
 		}
@@ -34,7 +34,7 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 			return []byte(cfg.JWT.SECRET), nil
 		})
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, "authentication error")
+			c.JSON(http.StatusUnauthorized, "authentication error 2")
 			c.Abort()
 			return
 		}
@@ -44,11 +44,11 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 				c.Set("ID", claims.Id)
 				c.Set("Email", claims.Audience)
 			} else {
-				c.JSON(http.StatusUnauthorized, "authentication error")
+				c.JSON(http.StatusUnauthorized, "authentication error 3")
 				c.Abort()
 			}
 		} else {
-			c.JSON(http.StatusUnauthorized, "authentication error")
+			c.JSON(http.StatusUnauthorized, "authentication error 4")
 			c.Abort()
 		}
 	}

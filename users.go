@@ -156,7 +156,7 @@ func (user *User) Update() (*User, error) {
 		return &User{}, err
 	}
 
-	return user, nil
+	return user.Get()
 }
 
 func (user *User) ToggleEnabled() (*User, error) {
