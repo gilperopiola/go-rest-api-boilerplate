@@ -101,7 +101,7 @@ func (user *User) Search(params *UserSearchParameters) ([]*User, error) {
 	}
 
 	query := fmt.Sprintf(`SELECT id, email, firstName, lastName, enabled, dateCreated 
-						  FROM users WHERE id LIKE ? AND email LIKE ? AND firstName LIKE ? AND lastName LIKE ?
+						  FROM users WHERE id LIKE ? OR email LIKE ? OR firstName LIKE ? OR lastName LIKE ?
 						  ORDER BY %s LIMIT ? OFFSET ?`, orderByString)
 
 	rows, err := db.DB.Query(query, "%"+params.FilterID+"%", "%"+params.FilterEmail+"%", "%"+params.FilterFirstName+"%",
