@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"time"
 
-	"github.com/gilperopiola/go-rest-api-boilerplate/utils"
+	"github.com/frutils"
 )
 
 type User struct {
@@ -24,52 +23,22 @@ type User struct {
 	Token string
 }
 
-//UserActions are external actions that the controllers can call
 type UserActions interface {
 	Login() (*User, error)
 
 	Create() (*User, error)
-	Search() ([]*User, error)
 	Get() (*User, error)
 	Update() (*User, error)
-	Delete() (*User, error)
+	Search() ([]*User, error)
 }
 
-//UserInternals are the actual functions that work on the database
-type UserInternals interface {
-	createRoles() error
-	getRoles() ([]Role, error)
-	updateRoles() ([]Role, error)
-	deleteRoles() error
-}
-
-//UserTestingActions are functions that aid in testing
 type UserTestingActions interface {
 	GenerateTestRequest(token, method, url string) *httptest.ResponseRecorder
 	GenerateJSONBody() string
+
 	getRolesJSONBodyString() string
-	generateSearchURLString() string
+	GenerateSearchURLString() string
 }
-
-type UserSearchParameters struct {
-	FilterID        string
-	FilterEmail     string
-	FilterFirstName string
-	FilterLastName  string
-
-	SortField     string
-	SortDirection string
-
-	Limit  int
-	Offset int
-}
-
-type Role int
-
-const (
-	RoleUser  Role = 0
-	RoleAdmin Role = 1
-)
 
 //UserActions
 func (user *User) Login() (*User, error) {
@@ -87,7 +56,7 @@ func (user *User) Create() (*User, error) {
 		return &User{}, err
 	}
 
-	user.ID = utils.StripLastInsertID(result.LastInsertId())
+	user.ID = frutils.GetID(result)
 
 	user.createRoles()
 
@@ -95,14 +64,10 @@ func (user *User) Create() (*User, error) {
 }
 
 func (user *User) Search(params *UserSearchParameters) ([]*User, error) {
-	orderByString := "id ASC"
-	if params.SortField != "" && params.SortDirection != "" {
-		orderByString = params.SortField + " " + params.SortDirection
-	}
 
 	query := fmt.Sprintf(`SELECT id, email, firstName, lastName, enabled, dateCreated 
-						  FROM users WHERE id LIKE ? OR email LIKE ? OR firstName LIKE ? OR lastName LIKE ?
-						  ORDER BY %s LIMIT ? OFFSET ?`, orderByString)
+						  FROM users WHERE id LIKE ? AND email LIKE ? AND firstName LIKE ? AND lastName LIKE ?
+						  ORDER BY %s LIMIT ? OFFSET ?`, frutils.GetOrderByString(params.SortField, params.SortDirection))
 
 	rows, err := db.DB.Query(query, "%"+params.FilterID+"%", "%"+params.FilterEmail+"%", "%"+params.FilterFirstName+"%",
 		"%"+params.FilterLastName+"%", params.Limit, params.Offset)
@@ -168,64 +133,6 @@ func (user *User) ToggleEnabled() (*User, error) {
 	return user.Get()
 }
 
-//UserInternals
-func (user *User) createRoles() error {
-	for _, role := range user.Roles {
-		_, err := db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (user *User) getRoles() ([]Role, error) {
-	rows, err := db.DB.Query(`SELECT idRole FROM users_roles WHERE idUser = ?`, user.ID)
-	defer rows.Close()
-	if err != nil {
-		return []Role{}, err
-	}
-
-	roles := []Role{}
-	for rows.Next() {
-		var role Role
-		err = rows.Scan(&role)
-		if err != nil {
-			return []Role{}, err
-		}
-
-		roles = append(roles, role)
-	}
-
-	return roles, nil
-}
-
-func (user *User) updateRoles() error {
-	err := user.deleteRoles()
-	if err != nil {
-		return err
-	}
-
-	for _, role := range user.Roles {
-		_, err = db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (user *User) deleteRoles() error {
-	_, err := db.DB.Exec(`DELETE FROM users_roles WHERE idUser = ?`, user.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 //UserTestingActions
 func (user *User) GenerateTestRequest(token, method, url string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
@@ -243,23 +150,9 @@ func (user *User) GetJSONBody() string {
 		"firstName": "` + user.FirstName + `",
 		"lastName": "` + user.LastName + `",
 		"roles": [` + user.getRolesJSONBodyString() + `],
-		"enabled": ` + utils.BoolToString(user.Enabled) + `
+		"enabled": ` + frutils.BoolToString(user.Enabled) + `
 	}`
 	return body
-}
-
-func (user *User) getRolesJSONBodyString() string {
-	rolesString := ""
-
-	for i, role := range user.Roles {
-		rolesString += strconv.Itoa(int(role))
-
-		if i+1 < len(user.Roles) {
-			rolesString += ", "
-		}
-	}
-
-	return rolesString
 }
 
 func (params *UserSearchParameters) generateSearchURLString() string {

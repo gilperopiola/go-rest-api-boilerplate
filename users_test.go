@@ -3,12 +3,12 @@ package main
 import (
 	"testing"
 
-	"github.com/gilperopiola/go-rest-api-boilerplate/utils"
+	"github.com/gilperopiola/frutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func createTestUserStruct(identifier int) *User {
-	stringIdentifier := utils.ToString(identifier)
+	stringIdentifier := frutils.ToString(identifier)
 
 	return &User{
 		Email:     "email" + stringIdentifier,
@@ -74,6 +74,34 @@ func TestGetUser(t *testing.T) {
 	assert.NotZero(t, user.DateCreated)
 }
 
+func TestUpdateUser(t *testing.T) {
+	cfg.Setup("test")
+	db.Setup(cfg)
+	defer db.Close()
+
+	user := createTestUserStruct(1)
+	user, _ = user.Create()
+
+	user.Email = "email2"
+	user.FirstName = "firstName2"
+	user.Roles = []Role{RoleAdmin}
+
+	user, err := user.Update()
+	assert.NoError(t, err)
+	assert.NotZero(t, user.ID)
+	assert.Equal(t, "email2", user.Email)
+	assert.Equal(t, "firstName2", user.FirstName)
+	assert.Equal(t, RoleAdmin, user.Roles[0])
+
+	user, err = user.ToggleEnabled()
+	assert.NoError(t, err)
+	assert.False(t, user.Enabled)
+
+	user, err = user.ToggleEnabled()
+	assert.NoError(t, err)
+	assert.True(t, user.Enabled)
+}
+
 func TestSearchUsers(t *testing.T) {
 	cfg.Setup("test")
 	db.Setup(cfg)
@@ -111,32 +139,4 @@ func TestSearchUsers(t *testing.T) {
 	assert.Equal(t, "lastName3", users[0].LastName)
 	assert.True(t, users[0].Enabled)
 	assert.NotZero(t, users[0].DateCreated)
-}
-
-func TestUpdateUser(t *testing.T) {
-	cfg.Setup("test")
-	db.Setup(cfg)
-	defer db.Close()
-
-	user := createTestUserStruct(1)
-	user, _ = user.Create()
-
-	user.Email = "email2"
-	user.FirstName = "firstName2"
-	user.Roles = []Role{RoleAdmin}
-
-	user, err := user.Update()
-	assert.NoError(t, err)
-	assert.NotZero(t, user.ID)
-	assert.Equal(t, "email2", user.Email)
-	assert.Equal(t, "firstName2", user.FirstName)
-	assert.Equal(t, RoleAdmin, user.Roles[0])
-
-	user, err = user.ToggleEnabled()
-	assert.NoError(t, err)
-	assert.False(t, user.Enabled)
-
-	user, err = user.ToggleEnabled()
-	assert.NoError(t, err)
-	assert.True(t, user.Enabled)
 }

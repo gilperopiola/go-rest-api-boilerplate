@@ -1,22 +1,12 @@
-package database
+package main
 
 import (
 	"database/sql"
 	"log"
-	"strings"
 
 	"github.com/gilperopiola/go-rest-api-boilerplate/config"
 	_ "github.com/go-sql-driver/mysql"
 )
-
-type DatabaseActions interface {
-	Setup()
-	Purge()
-	Migrate()
-
-	LoadTestingData()
-	BeautifyError(error) string
-}
 
 type MyDatabase struct {
 	*sql.DB
@@ -60,11 +50,6 @@ func (db *MyDatabase) CreateSchema() {
 	}
 }
 
-func (db *MyDatabase) Purge() {
-	db.DB.Exec("DELETE FROM users")
-	db.DB.Exec("DELETE FROM users_roles")
-}
-
 func (db *MyDatabase) CreateAdmin() {
 	result, err := db.DB.Exec("INSERT INTO users (email, password, firstName, lastName) VALUES ('ferra.main@gmail.com', 'MD1pQbDskXpNndv7zuLsZJt24RY=', 'Franco', 'Ferraguti')")
 	if err != nil {
@@ -79,13 +64,7 @@ func (db *MyDatabase) CreateAdmin() {
 	}
 }
 
-func (db *MyDatabase) BeautifyError(err error) string {
-	s := err.Error()
-
-	if strings.Contains(s, "Duplicate entry") {
-		duplicateField := strings.Split(s, "'")[3]
-		return duplicateField + " already in use"
-	}
-
-	return s
+func (db *MyDatabase) Purge() {
+	db.DB.Exec("DELETE FROM users")
+	db.DB.Exec("DELETE FROM users_roles")
 }

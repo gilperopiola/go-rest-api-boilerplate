@@ -13,8 +13,14 @@ type MyRouter struct {
 	*gin.Engine
 }
 
-func (router *MyRouter) Setup() {
-	gin.SetMode(gin.DebugMode)
+func (router *MyRouter) Setup(debug bool) {
+
+	if debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router.Engine = gin.New()
 
 	router.Use(cors.New(cors.Config{
@@ -34,9 +40,9 @@ func (router *MyRouter) Setup() {
 	user := router.Group("/User", validateToken(RoleAdmin))
 	{
 		user.POST("", CreateUser)
-		user.GET("", SearchUsers)
 		user.GET("/:id_user", GetUser)
 		user.PUT("/:id_user", UpdateUser)
 		user.PUT("/:id_user/Enabled", ToggleUserEnabled)
+		user.GET("", SearchUsers)
 	}
 }

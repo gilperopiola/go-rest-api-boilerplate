@@ -6,11 +6,10 @@ import (
 	"os"
 
 	"github.com/gilperopiola/go-rest-api-boilerplate/config"
-	"github.com/gilperopiola/go-rest-api-boilerplate/database"
 )
 
 var cfg config.MyConfig
-var db database.MyDatabase
+var db MyDatabase
 var rtr MyRouter
 
 func main() {
@@ -20,7 +19,7 @@ func main() {
 	cfg.Setup(*env)
 	db.Setup(cfg)
 	defer db.Close()
-	rtr.Setup()
+	rtr.Setup(true)
 
 	log.Println("server started")
 	rtr.Run(":" + os.Getenv("PORT"))

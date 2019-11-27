@@ -1,5 +1,5 @@
 {
-    "port": "8082",
+    "port": "9500",
     "debug": false,
     "database": {
         "type": "mysql",
@@ -7,13 +7,13 @@
         "password": "",
         "hostname": "127.0.0.1",
         "port": "3306",
-        "schema": "lyfe_companyon",
+        "schema": "db_schema",
         "create_schema": true,
-        "purge": false,
-        "create_admin": true
+        "create_admin": true,
+        "purge": false
     },
     "jwt": {
-        "secret": "a0#3ndl2",
+        "secret": "7uuw3Ja8",
         "session_duration": 14
     }
 }

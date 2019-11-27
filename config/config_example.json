@@ -1,19 +1,19 @@
 {
-    "port": "8000",
+    "port": "9500",
     "debug": false,
     "database": {
         "type": "mysql",
-        "username": "username",
-        "password": "password",
+        "username": "root",
+        "password": "",
         "hostname": "127.0.0.1",
         "port": "3306",
-        "schema": "schema",
+        "schema": "db_schema",
         "create_schema": true,
-        "purge": false,
-        "create_admin": true
+        "create_admin": true,
+        "purge": false
     },
     "jwt": {
-        "secret": "a9jdq2je",
+        "secret": "7uuw3Ja8",
         "session_duration": 14
     }
 }

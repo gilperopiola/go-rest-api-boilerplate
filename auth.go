@@ -9,7 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gilperopiola/go-rest-api-boilerplate/utils"
+	"github.com/gilperopiola/frutils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,7 +25,7 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 		tokenString := c.Request.Header.Get("Authorization")
 
 		if len(tokenString) < 40 {
-			c.JSON(http.StatusUnauthorized, "authentication error 1")
+			c.JSON(http.StatusUnauthorized, "authentication error 1: wrong token length")
 			c.Abort()
 			return
 		}
@@ -33,22 +33,23 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 		token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(cfg.JWT.SECRET), nil
 		})
+
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, "authentication error 2")
+			c.JSON(http.StatusUnauthorized, "authentication error 2: cannot parse token")
 			c.Abort()
 			return
 		}
 
 		if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
-			if hasRequiredRoles(utils.ToInt(claims.Id), requiredRoles) {
+			if hasRequiredRoles(frutils.ToInt(claims.Id), requiredRoles) {
 				c.Set("ID", claims.Id)
 				c.Set("Email", claims.Audience)
 			} else {
-				c.JSON(http.StatusUnauthorized, "authentication error 3")
+				c.JSON(http.StatusUnauthorized, "authentication error 3: required role not met")
 				c.Abort()
 			}
 		} else {
-			c.JSON(http.StatusUnauthorized, "authentication error 4")
+			c.JSON(http.StatusUnauthorized, "authentication error 4: invalid claims or token")
 			c.Abort()
 		}
 	}
@@ -57,7 +58,7 @@ func validateToken(requiredRoles ...Role) gin.HandlerFunc {
 func hasRequiredRoles(IDUser int, roles []Role) bool {
 	rolesStrings := make([]string, 0)
 	for _, role := range roles {
-		rolesStrings = append(rolesStrings, utils.ToString(int(role)))
+		rolesStrings = append(rolesStrings, frutils.ToString(int(role)))
 	}
 	rolesString := strings.Join(rolesStrings, ",")
 
