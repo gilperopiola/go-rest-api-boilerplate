@@ -10,8 +10,7 @@ import (
 //Signup takes {email, password, repeatPassword}. It creates a user and returns it.
 func Signup(c *gin.Context) {
 	var auth Auth
-	bindErr := c.BindJSON(&auth)
-	if bindErr != nil {
+	if bindErr := c.BindJSON(&auth); bindErr != nil {
 		c.JSON(http.StatusBadRequest, bindErr.Error())
 		return
 	}
@@ -45,8 +44,7 @@ func Signup(c *gin.Context) {
 //Login takes {email, password}, checks if the user exists and returns it.
 func Login(c *gin.Context) {
 	var auth Auth
-	bindErr := c.BindJSON(&auth)
-	if bindErr != nil {
+	if bindErr := c.BindJSON(&auth); bindErr != nil {
 		c.JSON(http.StatusBadRequest, bindErr.Error())
 		return
 	}
@@ -74,8 +72,7 @@ func Login(c *gin.Context) {
 
 func CreateUser(c *gin.Context) {
 	var user *User
-	bindErr := c.BindJSON(&user)
-	if bindErr != nil {
+	if bindErr := c.BindJSON(&user); bindErr != nil {
 		c.JSON(http.StatusBadRequest, bindErr.Error())
 		return
 	}
@@ -114,8 +111,7 @@ func GetUser(c *gin.Context) {
 
 func UpdateUser(c *gin.Context) {
 	var user *User
-	bindErr := c.BindJSON(&user)
-	if bindErr != nil {
+	if bindErr := c.BindJSON(&user); bindErr != nil {
 		c.JSON(http.StatusBadRequest, bindErr.Error())
 		return
 	}
@@ -151,18 +147,8 @@ func ToggleUserEnabled(c *gin.Context) {
 func SearchUsers(c *gin.Context) {
 	user := &User{}
 
-	params := &UserSearchParameters{
-		FilterID:        c.Query("id"),
-		FilterEmail:     c.Query("email"),
-		FilterFirstName: c.Query("firstName"),
-		FilterLastName:  c.Query("lastName"),
-
-		SortField:     c.Query("sortField"),
-		SortDirection: c.Query("sortDirection"),
-
-		Limit:  frutils.ToInt(c.Query("limit")),
-		Offset: frutils.ToInt(c.Query("offset")),
-	}
+	params := &UserSearchParameters{}
+	params = params.Fill(c)
 
 	users, err := user.Search(params)
 	if err != nil {

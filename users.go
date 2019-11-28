@@ -69,8 +69,7 @@ func (user *User) Search(params *UserSearchParameters) ([]*User, error) {
 						  FROM users WHERE id LIKE ? AND email LIKE ? AND firstName LIKE ? AND lastName LIKE ?
 						  ORDER BY %s LIMIT ? OFFSET ?`, frutils.GetOrderByString(params.SortField, params.SortDirection))
 
-	rows, err := db.DB.Query(query, "%"+params.FilterID+"%", "%"+params.FilterEmail+"%", "%"+params.FilterFirstName+"%",
-		"%"+params.FilterLastName+"%", params.Limit, params.Offset)
+	rows, err := db.DB.Query(query, params.getQueryFormat()...)
 
 	defer rows.Close()
 	if err != nil {
@@ -80,15 +79,15 @@ func (user *User) Search(params *UserSearchParameters) ([]*User, error) {
 	users := []*User{}
 	for rows.Next() {
 		tempUser := &User{}
-		err = rows.Scan(&tempUser.ID, &tempUser.Email, &tempUser.FirstName, &tempUser.LastName, &tempUser.Enabled, &tempUser.DateCreated)
-		if err != nil {
+
+		if err = rows.Scan(&tempUser.ID, &tempUser.Email, &tempUser.FirstName, &tempUser.LastName, &tempUser.Enabled, &tempUser.DateCreated); err != nil {
 			return []*User{}, err
 		}
 
-		tempUser.Roles, err = tempUser.getRoles()
-		if err != nil {
+		if tempUser.Roles, err = tempUser.getRoles(); err != nil {
 			return []*User{}, err
 		}
+
 		users = append(users, tempUser)
 	}
 
@@ -96,14 +95,12 @@ func (user *User) Search(params *UserSearchParameters) ([]*User, error) {
 }
 
 func (user *User) Get() (*User, error) {
-	err := db.DB.QueryRow(`SELECT email, password, firstName, lastName, enabled, dateCreated FROM users WHERE id = ?`, user.ID).
-		Scan(&user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Enabled, &user.DateCreated)
+	err := db.DB.QueryRow(`SELECT email, password, firstName, lastName, enabled, dateCreated FROM users WHERE id = ?`, user.ID).Scan(&user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Enabled, &user.DateCreated)
 	if err != nil {
 		return &User{}, err
 	}
 
-	user.Roles, err = user.getRoles()
-	if err != nil {
+	if user.Roles, err = user.getRoles(); err != nil {
 		return &User{}, err
 	}
 
@@ -111,13 +108,11 @@ func (user *User) Get() (*User, error) {
 }
 
 func (user *User) Update() (*User, error) {
-	_, err := db.DB.Exec(`UPDATE users SET email = ?, firstName = ?, lastName = ? WHERE id = ?`, user.Email, user.FirstName, user.LastName, user.ID)
-	if err != nil {
+	if _, err := db.DB.Exec(`UPDATE users SET email = ?, firstName = ?, lastName = ? WHERE id = ?`, user.Email, user.FirstName, user.LastName, user.ID); err != nil {
 		return &User{}, err
 	}
 
-	err = user.updateRoles()
-	if err != nil {
+	if err := user.updateRoles(); err != nil {
 		return &User{}, err
 	}
 
@@ -125,8 +120,7 @@ func (user *User) Update() (*User, error) {
 }
 
 func (user *User) ToggleEnabled() (*User, error) {
-	_, err := db.DB.Exec(`UPDATE users SET enabled = NOT enabled WHERE id = ?`, user.ID)
-	if err != nil {
+	if _, err := db.DB.Exec(`UPDATE users SET enabled = NOT enabled WHERE id = ?`, user.ID); err != nil {
 		return &User{}, err
 	}
 
@@ -156,6 +150,5 @@ func (user *User) GetJSONBody() string {
 }
 
 func (params *UserSearchParameters) generateSearchURLString() string {
-	return fmt.Sprintf("?id=%s&email=%s&firstName=%s&lastName=%s&sortField=%s&sortDirection=%s&limit=%d&offset=%d",
-		params.FilterID, params.FilterEmail, params.FilterFirstName, params.FilterLastName, params.SortField, params.SortDirection, params.Limit, params.Offset)
+	return fmt.Sprintf("?id=%s&email=%s&firstName=%s&lastName=%s&sortField=%s&sortDirection=%s&limit=%d&offset=%d", params.FilterID, params.FilterEmail, params.FilterFirstName, params.FilterLastName, params.SortField, params.SortDirection, params.Limit, params.Offset)
 }

@@ -1,13 +1,55 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestSignupController(t *testing.T) {
+	cfg.Setup("test")
+	db.Setup(cfg)
+	defer db.Close()
+	rtr.Setup(false)
+
+	w := httptest.NewRecorder()
+	body := `{
+		"email": "email1",
+		"password": "password",
+		"repeatPassword": "password"
+	}`
+	req, _ := http.NewRequest("POST", "/Signup", bytes.NewReader([]byte(body)))
+	rtr.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLoginController(t *testing.T) {
+	cfg.Setup("test")
+	db.Setup(cfg)
+	defer db.Close()
+	rtr.Setup(false)
+
+	user := createTestUserStruct(1)
+	user, _ = user.Create()
+
+	w := httptest.NewRecorder()
+	body := `{
+		"email": "` + user.Email + `",
+		"password": "password"
+	}`
+	req, _ := http.NewRequest("POST", "/Login", bytes.NewReader([]byte(body)))
+	rtr.ServeHTTP(w, req)
+
+	json.Unmarshal(w.Body.Bytes(), &user)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotEmpty(t, user.Token)
+}
 
 func TestCreateUserController(t *testing.T) {
 	cfg.Setup("test")

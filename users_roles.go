@@ -13,8 +13,7 @@ const (
 
 func (user *User) createRoles() error {
 	for _, role := range user.Roles {
-		_, err := db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role)
-		if err != nil {
+		if _, err := db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role); err != nil {
 			return err
 		}
 	}
@@ -32,8 +31,8 @@ func (user *User) getRoles() ([]Role, error) {
 	roles := []Role{}
 	for rows.Next() {
 		var role Role
-		err = rows.Scan(&role)
-		if err != nil {
+
+		if err = rows.Scan(&role); err != nil {
 			return []Role{}, err
 		}
 
@@ -44,14 +43,12 @@ func (user *User) getRoles() ([]Role, error) {
 }
 
 func (user *User) updateRoles() error {
-	err := user.deleteRoles()
-	if err != nil {
+	if err := user.deleteRoles(); err != nil {
 		return err
 	}
 
 	for _, role := range user.Roles {
-		_, err = db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role)
-		if err != nil {
+		if _, err := db.DB.Exec(`INSERT INTO users_roles (idUser, idRole) VALUES (?, ?)`, user.ID, role); err != nil {
 			return err
 		}
 	}
@@ -60,8 +57,7 @@ func (user *User) updateRoles() error {
 }
 
 func (user *User) deleteRoles() error {
-	_, err := db.DB.Exec(`DELETE FROM users_roles WHERE idUser = ?`, user.ID)
-	if err != nil {
+	if _, err := db.DB.Exec(`DELETE FROM users_roles WHERE idUser = ?`, user.ID); err != nil {
 		return err
 	}
 
