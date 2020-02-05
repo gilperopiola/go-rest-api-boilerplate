@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/frutils"
+	"github.com/gilperopiola/frutils"
 )
 
 type User struct {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/frutils"
+	"github.com/gilperopiola/frutils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +20,8 @@ type UserSearchParameters struct {
 }
 
 func (params *UserSearchParameters) Fill(c *gin.Context) *UserSearchParameters {
-	return &UserSearchParameters{
+
+	searchParams := &UserSearchParameters{
 		FilterID:        c.Query("id"),
 		FilterEmail:     c.Query("email"),
 		FilterFirstName: c.Query("firstName"),
@@ -32,6 +33,12 @@ func (params *UserSearchParameters) Fill(c *gin.Context) *UserSearchParameters {
 		Limit:  frutils.ToInt(c.Query("limit")),
 		Offset: frutils.ToInt(c.Query("offset")),
 	}
+
+	if searchParams.Limit == 0 {
+		searchParams.Limit = 99999
+	}
+
+	return searchParams
 }
 
 func (params *UserSearchParameters) getQueryFormat() []interface{} {
